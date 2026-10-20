@@ -1,38 +1,96 @@
+"""
+VoiceDesk - Automatic Speech Recognition (ASR)
+
+Leverages Groq Cloud Whisper (whisper-large-v3-turbo) for ultra-fast,
+high-accuracy audio transcription with async and sync interfaces.
+"""
+
+import asyncio
+import logging
 import os
-import aiofiles
+from typing import Optional
+
 from dotenv import load_dotenv
-from groq import AsyncGroq
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise RuntimeError("GROQ_API_KEY is not set in .env")
+logger = logging.getLogger("VoiceDesk.ASR")
 
-client = AsyncGroq(api_key=GROQ_API_KEY)
+DEFAULT_ASR_MODEL = "whisper-large-v3-turbo"
+_async_groq_client = None
 
 
-async def transcribe_audio(file_path: str) -> str:
-    """
-    Uses Groq Whisper (whisper-large-v3-turbo) to transcribe a WAV/MP3 file.
-    Returns plain text.
-    """
+def get_async_groq_client():
+    """Lazily instantiate and cache the AsyncGroq client."""
+    global _async_groq_client
+    if _async_groq_client is not None:
+        return _async_groq_client
+
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        logger.warning("GROQ_API_KEY is not configured in environment or .env file.")
+        return None
+
     try:
-        # Open file async? Groq client might need file object.
-        # Standard open() is blocking, but for small files it's okay-ish.
-        # Better: run in thread pool if strict async needed,
-        # but Groq's .create() does async network I/O which is the bottleneck.
-        # We'll use standard open for simplicity, it's brief.
-        with open(file_path, "rb") as f:
+        from groq import AsyncGroq
+        _async_groq_client = AsyncGroq(api_key=api_key)
+        return _async_groq_client
+    except ImportError:
+        logger.error("The 'groq' package is not installed. Install with: pip install groq")
+        return None
+
+
+async def transcribe_audio(
+    file_path: str,
+    model: str = DEFAULT_ASR_MODEL,
+    temperature: float = 0.0,
+) -> str:
+    """
+    Transcribe audio file using Groq Whisper.
+
+    :param file_path: Path to the WAV or MP3 audio file.
+    :param model: Whisper model identifier.
+    :param temperature: Sampling temperature for Whisper decoding.
+    :return: Transcribed text string, or empty string on failure.
+    """
+    if not os.path.exists(file_path):
+        logger.error(f"Audio file does not exist: {file_path}")
+        return ""
+
+    if os.path.getsize(file_path) == 0:
+        logger.warning(f"Audio file is empty: {file_path}")
+        return ""
+
+    client = get_async_groq_client()
+    if client is None:
+        logger.error("Cannot transcribe: Groq client is unavailable.")
+        return ""
+
+    try:
+        with open(file_path, "rb") as audio_file:
             transcription = await client.audio.transcriptions.create(
-                file=f,
-                model="whisper-large-v3-turbo",  # fast + accurate model from Groq
+                file=audio_file,
+                model=model,
                 response_format="json",
-                temperature=0.0,
+                temperature=temperature,
             )
-        text = transcription.text.strip()
-        print(f"[VoiceDesk] Transcription: {text}")
+
+        text = getattr(transcription, "text", "").strip()
+        logger.info(f"Transcribed ({os.path.basename(file_path)}): {text}")
         return text
-    except Exception as e:
-        print(f"[VoiceDesk] ASR error: {e}")
+
+    except Exception as exc:
+        logger.error(f"ASR transcription error: {exc}")
+        return ""
+
+
+def transcribe_audio_sync(
+    file_path: str,
+    model: str = DEFAULT_ASR_MODEL,
+) -> str:
+    """Synchronous convenience wrapper around transcribe_audio."""
+    try:
+        return asyncio.run(transcribe_audio(file_path=file_path, model=model))
+    except Exception as exc:
+        logger.error(f"Sync ASR transcription error: {exc}")
         return ""
