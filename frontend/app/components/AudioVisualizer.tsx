@@ -11,7 +11,7 @@ interface AudioVisualizerProps {
 export default function AudioVisualizer({
     isListening,
     isSpeaking,
-    audioData
+    audioData,
 }: AudioVisualizerProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -34,44 +34,35 @@ export default function AudioVisualizer({
             ctx.clearRect(0, 0, width, height);
             ctx.lineCap = "round";
 
-            // Color based on state
-            let color = "rgba(75, 85, 99, 0.5)"; // Gray (Idle)
-            if (isListening) color = "rgba(139, 92, 246, 0.8)"; // Purple (Listening)
-            if (isSpeaking) color = "rgba(59, 130, 246, 0.8)"; // Blue (Speaking)
+            // Dynamic color state
+            let color = "rgba(107, 114, 128, 0.4)"; // Gray (Idle)
+            if (isListening) color = "rgba(168, 85, 247, 0.85)"; // Purple (Listening)
+            if (isSpeaking) color = "rgba(52, 211, 153, 0.85)"; // Emerald (Speaking)
 
             ctx.fillStyle = color;
 
-            const bars = 60;
+            const bars = 48;
             const barWidth = 4;
-            const spacing = 6;
+            const spacing = 4;
             const totalWidth = bars * (barWidth + spacing);
             const startX = (width - totalWidth) / 2;
 
             for (let i = 0; i < bars; i++) {
-                let barHeight = 4; // Min height
+                let barHeight = 4;
 
                 if ((isListening || isSpeaking) && audioData && audioData.length > 0) {
-                    // Map data to bars
-                    // Simple simulation if no real data yet
-                    // If we have real data, we map audioData[i] to height
-                    // For now, let's use a simulated wave if data is missing or just noise
-
-                    // Real data usage:
-                    // const index = Math.floor((i / bars) * audioData.length);
-                    // barHeight = (audioData[index] / 255) * (height / 2);
-
-                    // Simulated "Alive" effect for demo if data is sparse
-                    const noise = Math.sin(time + i * 0.2) * 20;
-                    barHeight = 10 + Math.abs(noise) + Math.random() * 10;
-                    if (isSpeaking) barHeight *= 2.5;
+                    const dataIndex = Math.floor((i / bars) * audioData.length);
+                    const rawVal = audioData[dataIndex] || 0;
+                    barHeight = 6 + (rawVal / 255) * (height * 0.7);
+                    if (isSpeaking) barHeight = Math.max(barHeight, 10 + Math.sin(time + i * 0.4) * 20);
+                } else if (isListening) {
+                    const noise = Math.sin(time + i * 0.3) * 12;
+                    barHeight = 8 + Math.abs(noise);
                 } else {
-                    // Idle breathing
-                    barHeight = 4 + Math.sin(time + i * 0.5) * 2;
+                    barHeight = 4 + Math.sin(time + i * 0.4) * 2.5;
                 }
 
                 const x = startX + i * (barWidth + spacing);
-
-                // Draw symmetric bars
                 ctx.fillRect(x, centerY - barHeight / 2, barWidth, barHeight);
             }
 
@@ -84,5 +75,11 @@ export default function AudioVisualizer({
     }, [isListening, isSpeaking, audioData]);
 
     return (
-        <
+        <canvas
+            ref={canvasRef}
+            width={480}
+            height={90}
+            className="w-full max-w-md h-24 block"
+        />
+    );
 }
