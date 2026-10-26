@@ -54,7 +54,7 @@ async def generate_audio_stream(
     :param voice: Neural voice identifier (falls back to DEFAULT_VOICE).
     :return: Stream of binary MP3 audio frames.
     """
-    selected_voice = voice or os.getenv("VOICEDESK_VOICE", DEFAULT_VOICE)
+    selected_voice = voice or DEFAULT_VOICE
     buffer = ""
 
     try:
@@ -98,7 +98,7 @@ async def tts_to_file(
     """
     try:
         import edge_tts
-        selected_voice = voice or os.getenv("VOICEDESK_VOICE", DEFAULT_VOICE)
+        selected_voice = voice or DEFAULT_VOICE
         communicate = edge_tts.Communicate(text, selected_voice)
         await communicate.save(output_file)
         return True
