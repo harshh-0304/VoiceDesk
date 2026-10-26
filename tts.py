@@ -59,13 +59,16 @@ def text_to_speech(
         base_dir = os.path.dirname(os.path.abspath(output_path))
         fast_output = os.path.join(base_dir, f"fast_{os.path.basename(output_path)}")
 
+        # ffmpeg's atempo filter only accepts factors in [0.5, 2.0] per stage.
+        atempo = max(0.5, min(2.0, speed))
+
         speed_args = [
             ffmpeg_bin,
             "-y",
             "-i",
             output_path,
             "-filter:a",
-            f"atempo={speed:.2f}",
+            f"atempo={atempo:.2f}",
             fast_output,
         ]
 
