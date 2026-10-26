@@ -39,3 +39,16 @@ def test_load_system_prompt():
     prompt = load_system_prompt()
     assert isinstance(prompt, str)
     assert len(prompt) > 0
+
+
+def test_websocket_ping_pong():
+    with client.websocket_connect("/ws/audio") as ws:
+        ws.send_json({"type": "ping"})
+        assert ws.receive_json() == {"type": "pong"}
+
+
+def test_websocket_rejects_invalid_json():
+    with client.websocket_connect("/ws/audio") as ws:
+        ws.send_text("not-json")
+        reply = ws.receive_json()
+        assert reply["type"] == "error"
