@@ -57,6 +57,12 @@ frontend/.npm/
 *.tsbuildinfo
 next-env.d.ts
 
+# Stray image uploads / screenshots
+*.jpeg
+*.jpg
+*.png
+!frontend/public/*
+
 # OS & Editor
 .DS_Store
 Thumbs.db
