@@ -33,10 +33,12 @@ load_dotenv()
 # Reject oversized audio payloads early to bound per-connection memory use.
 MAX_AUDIO_BYTES = int(os.getenv("MAX_AUDIO_BYTES", str(25 * 1024 * 1024)))
 
+SERVICE_VERSION = "1.2.0"
+
 app = FastAPI(
     title="VoiceDesk Audio AI Server",
     description="Real-time voice assistant API with Groq Whisper ASR, LLaMA 3, and Edge TTS streaming.",
-    version="1.2.0",
+    version=SERVICE_VERSION,
 )
 
 # Parse CORS origins from environment or default to common development URLs
@@ -76,7 +78,7 @@ async def root():
     return {
         "status": "online",
         "service": "VoiceDesk",
-        "version": "1.2.0",
+        "version": SERVICE_VERSION,
         "endpoints": {
             "health": "/health",
             "info": "/api/info",
