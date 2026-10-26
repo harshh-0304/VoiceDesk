@@ -9,10 +9,13 @@ Provides streaming and non-streaming responses for both WebSocket and CLI interf
 import asyncio
 import logging
 import os
-from typing import AsyncGenerator, Dict, List, Optional
+from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional
 
 from dotenv import load_dotenv
 from memory import ConversationMemory
+
+if TYPE_CHECKING:
+    from groq import AsyncGroq
 
 load_dotenv()
 
@@ -22,7 +25,7 @@ DEFAULT_LLM_MODEL = os.getenv("VOICEDESK_MODEL", "llama-3.3-70b-versatile")
 _async_groq_client = None
 
 
-def get_async_groq_client():
+def get_async_groq_client() -> Optional["AsyncGroq"]:
     """Lazily instantiate and cache the AsyncGroq client."""
     global _async_groq_client
     if _async_groq_client is not None:
