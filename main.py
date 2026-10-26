@@ -23,7 +23,7 @@ from utils.audio import is_microphone_available, record_microphone
 
 load_dotenv()
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "WARNING").upper())
 logger = logging.getLogger("VoiceDesk.CLI")
 
 
