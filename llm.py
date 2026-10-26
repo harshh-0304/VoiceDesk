@@ -9,40 +9,17 @@ Provides streaming and non-streaming responses for both WebSocket and CLI interf
 import asyncio
 import logging
 import os
-from typing import TYPE_CHECKING, AsyncGenerator, Dict, List, Optional
+from typing import AsyncGenerator, Dict, List, Optional
 
 from dotenv import load_dotenv
 from memory import ConversationMemory
-
-if TYPE_CHECKING:
-    from groq import AsyncGroq
+from utils.groq_client import get_async_groq_client
 
 load_dotenv()
 
 logger = logging.getLogger("VoiceDesk.LLM")
 
 DEFAULT_LLM_MODEL = os.getenv("VOICEDESK_MODEL", "llama-3.3-70b-versatile")
-_async_groq_client = None
-
-
-def get_async_groq_client() -> Optional["AsyncGroq"]:
-    """Lazily instantiate and cache the AsyncGroq client."""
-    global _async_groq_client
-    if _async_groq_client is not None:
-        return _async_groq_client
-
-    api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        logger.warning("GROQ_API_KEY is not configured in environment or .env file.")
-        return None
-
-    try:
-        from groq import AsyncGroq
-        _async_groq_client = AsyncGroq(api_key=api_key)
-        return _async_groq_client
-    except ImportError:
-        logger.error("The 'groq' package is not installed. Install with: pip install groq")
-        return None
 
 
 def _build_messages(
