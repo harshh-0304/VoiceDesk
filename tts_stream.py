@@ -15,6 +15,10 @@ logger = logging.getLogger("VoiceDesk.TTSStream")
 DEFAULT_VOICE = os.getenv("VOICEDESK_VOICE", "en-US-ChristopherNeural")
 PUNCTUATION_SPLIT_REGEX = re.compile(r"([.!?\n]+)")
 
+# Minimum buffered characters before flushing a clause to synthesis. Keeps
+# short fragments and decimals (e.g. "3.14") from being split prematurely.
+MIN_FLUSH_CHARS = 15
+
 
 async def _stream_text_chunk(text: str, voice: str) -> AsyncGenerator[bytes, None]:
     """Helper to stream audio frames for a synthesized clause or sentence."""
@@ -63,7 +67,7 @@ async def generate_audio_stream(
 
             # Check if we have complete sentences or thought boundaries
             # Avoid prematurely splitting on short strings or decimals
-            if len(buffer) >= 15 and any(punct in buffer for punct in [".", "!", "?", "\n"]):
+            if len(buffer) >= MIN_FLUSH_CHARS and any(punct in buffer for punct in [".", "!", "?", "\n"]):
                 parts = PUNCTUATION_SPLIT_REGEX.split(buffer)
                 # Keep everything up to the last split delimiter
                 if len(parts) > 2:
