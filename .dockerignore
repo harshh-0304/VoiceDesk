@@ -1,0 +1,17 @@
+.git
+.github
+__pycache__
+*.pyc
+.pytest_cache
+.venv
+venv
+.env
+frontend
+tests
+*.mp3
+*.wav
+*.jpeg
+*.jpg
+*.png
+temp_*
+*.log
