@@ -19,7 +19,4 @@ aiofiles>=23.2.0
 # Optional / Fallback Audio (CLI mode)
 gTTS>=2.5.0
 
-# Development & Testing (Optional)
-# PyAudio>=0.2.13
-# pytest>=8.0.0
-# pytest-asyncio>=0.23.0
+# Development & testing dependencies live in requirements-dev.txt
