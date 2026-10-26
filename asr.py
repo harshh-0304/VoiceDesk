@@ -86,10 +86,13 @@ async def transcribe_audio(
 def transcribe_audio_sync(
     file_path: str,
     model: str = DEFAULT_ASR_MODEL,
+    temperature: float = 0.0,
 ) -> str:
     """Synchronous convenience wrapper around transcribe_audio."""
     try:
-        return asyncio.run(transcribe_audio(file_path=file_path, model=model))
+        return asyncio.run(
+            transcribe_audio(file_path=file_path, model=model, temperature=temperature)
+        )
     except Exception as exc:
         logger.error(f"Sync ASR transcription error: {exc}")
         return ""
