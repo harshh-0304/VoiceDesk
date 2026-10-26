@@ -7,6 +7,8 @@ Provides thread-safe and serialized memory states for both CLI and WebSocket ses
 
 from typing import List, Dict, Optional, Any
 
+VALID_ROLES = frozenset({"system", "user", "assistant", "tool"})
+
 
 class ConversationMemory:
     """
@@ -38,6 +40,8 @@ class ConversationMemory:
 
     def add_message(self, role: str, content: str) -> None:
         """Add an arbitrary role message (e.g. system or tool) to history."""
+        if role not in VALID_ROLES:
+            raise ValueError(f"Invalid role '{role}'. Expected one of {sorted(VALID_ROLES)}.")
         cleaned = content.strip() if content else ""
         if not cleaned:
             return
