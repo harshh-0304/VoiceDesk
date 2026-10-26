@@ -17,6 +17,6 @@ edge-tts>=6.1.10
 aiofiles>=23.2.0
 
 # Optional / Fallback Audio (CLI mode)
-gTTS>=2.5.0
+gTTS>=2.5.4
 
 # Development & testing dependencies live in requirements-dev.txt
