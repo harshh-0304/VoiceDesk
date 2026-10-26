@@ -45,6 +45,10 @@ temp_*
 *.tmp
 *.log
 
+# Generated audio artifacts
+*.mp3
+*.wav
+
 # Node & Next.js
 frontend/.next/
 frontend/out/
