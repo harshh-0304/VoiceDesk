@@ -23,7 +23,7 @@ from tts_stream import DEFAULT_VOICE, generate_audio_stream
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
     format="%(asctime)s [%(levelname)s] [%(name)s]: %(message)s",
 )
 logger = logging.getLogger("VoiceDesk.Server")
