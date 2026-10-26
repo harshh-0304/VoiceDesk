@@ -30,6 +30,9 @@ logger = logging.getLogger("VoiceDesk.Server")
 
 load_dotenv()
 
+# Reject oversized audio payloads early to bound per-connection memory use.
+MAX_AUDIO_BYTES = int(os.getenv("MAX_AUDIO_BYTES", str(25 * 1024 * 1024)))
+
 app = FastAPI(
     title="VoiceDesk Audio AI Server",
     description="Real-time voice assistant API with Groq Whisper ASR, LLaMA 3, and Edge TTS streaming.",
@@ -150,6 +153,12 @@ async def audio_websocket(websocket: WebSocket):
                     logger.error(f"Base64 decode failure: {b64_err}")
                     await websocket.send_json(
                         {"type": "error", "message": "Invalid base64 audio payload."}
+                    )
+                    continue
+
+                if len(audio_bytes) > MAX_AUDIO_BYTES:
+                    await websocket.send_json(
+                        {"type": "error", "message": "Audio payload exceeds size limit."}
                     )
                     continue
 
