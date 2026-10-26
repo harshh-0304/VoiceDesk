@@ -11,8 +11,6 @@ import json
 import logging
 import os
 import tempfile
-import uuid
-from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
