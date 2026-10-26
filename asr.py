@@ -8,7 +8,6 @@ high-accuracy audio transcription with async and sync interfaces.
 import asyncio
 import logging
 import os
-from typing import Optional
 
 from dotenv import load_dotenv
 
