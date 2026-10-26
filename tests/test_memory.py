@@ -91,3 +91,24 @@ def test_clear_memory():
     mem.clear()
     assert len(mem) == 0
     assert mem.get_history() == []
+
+
+def test_add_message_rejects_invalid_role():
+    import pytest
+
+    mem = ConversationMemory(max_messages=5)
+    with pytest.raises(ValueError):
+        mem.add_message("robot", "hello")
+
+
+def test_from_dict_skips_unknown_roles():
+    data = {
+        "max_messages": 5,
+        "messages": [
+            {"role": "user", "content": "keep me"},
+            {"role": "robot", "content": "drop me"},
+            {"role": "assistant", "content": "keep me too"},
+        ],
+    }
+    mem = ConversationMemory.from_dict(data)
+    assert [m["role"] for m in mem.get_history()] == ["user", "assistant"]
