@@ -3,6 +3,7 @@
 > **High-Performance Real-Time Voice AI Agent**  
 > Powered by Groq Cloud Whisper ASR, LLaMA 3.3 Intelligence, Microsoft Edge Neural TTS Streaming, and Next.js.
 
+[![CI](https://github.com/harshh-0304/VoiceDesk/actions/workflows/ci.yml/badge.svg)](https://github.com/harshh-0304/VoiceDesk/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js%2016-black.svg)](https://nextjs.org/)
