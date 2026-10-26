@@ -21,7 +21,7 @@ def is_microphone_available() -> bool:
         try:
             device_count = pa.get_device_count()
             for i in range(device_count):
-                info = pa.get_device_info_by_host_api_device_index(0, i)
+                info = pa.get_device_info_by_index(i)
                 if info.get("maxInputChannels", 0) > 0:
                     return True
             return False
