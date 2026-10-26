@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # Fast API Backend & ASGI Server
-fastapi>=0.110.0
+fastapi>=0.161.1
 uvicorn[standard]>=0.28.0
 websockets>=12.0
 
