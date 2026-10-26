@@ -88,7 +88,11 @@ class ConversationMemory:
         max_messages = data.get("max_messages", 12)
         instance = cls(max_messages=max_messages)
         for msg in data.get("messages", []):
-            if isinstance(msg, dict) and "role" in msg and "content" in msg:
+            if (
+                isinstance(msg, dict)
+                and msg.get("role") in VALID_ROLES
+                and "content" in msg
+            ):
                 instance.add_message(msg["role"], msg["content"])
         return instance
 
