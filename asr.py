@@ -8,8 +8,12 @@ high-accuracy audio transcription with async and sync interfaces.
 import asyncio
 import logging
 import os
+from typing import TYPE_CHECKING, Optional
 
 from dotenv import load_dotenv
+
+if TYPE_CHECKING:
+    from groq import AsyncGroq
 
 load_dotenv()
 
@@ -19,7 +23,7 @@ DEFAULT_ASR_MODEL = "whisper-large-v3-turbo"
 _async_groq_client = None
 
 
-def get_async_groq_client():
+def get_async_groq_client() -> Optional["AsyncGroq"]:
     """Lazily instantiate and cache the AsyncGroq client."""
     global _async_groq_client
     if _async_groq_client is not None:
