@@ -17,7 +17,7 @@ load_dotenv()
 
 logger = logging.getLogger("VoiceDesk.ASR")
 
-DEFAULT_ASR_MODEL = "whisper-large-v3-turbo"
+DEFAULT_ASR_MODEL = os.getenv("VOICEDESK_ASR_MODEL", "whisper-large-v3")
 
 
 async def transcribe_audio(
@@ -47,15 +47,25 @@ async def transcribe_audio(
         return ""
 
     try:
+        asr_language = os.getenv("VOICEDESK_LANGUAGE", "en")
         with open(file_path, "rb") as audio_file:
             transcription = await client.audio.transcriptions.create(
                 file=audio_file,
                 model=model,
                 response_format="json",
                 temperature=temperature,
+                prompt="VoiceDesk, an AI assistant. Conversational English.",
+                language=asr_language if asr_language != "auto" else None,
             )
 
         text = getattr(transcription, "text", "").strip()
+
+        # Suppress common Whisper phantom hallucinations on silence / quiet audio
+        phantom_transcripts = {".", "..", "...", "!", "?", "Thank you.", "Thank you", "You", "Bye.", "Silence."}
+        if text in phantom_transcripts or len(text) <= 1:
+            logger.info(f"Ignored phantom / silent transcription: '{text}'")
+            return ""
+
         logger.info(f"Transcribed ({os.path.basename(file_path)}): {text}")
         return text
 
