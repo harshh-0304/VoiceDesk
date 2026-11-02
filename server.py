@@ -164,14 +164,38 @@ async def audio_websocket(websocket: WebSocket):
                     )
                     continue
 
+                # Auto-detect container format to ensure Groq Whisper decodes correctly
+                if audio_bytes.startswith(b"\x1a\x45\xdf\xa3"):
+                    suffix = ".webm"
+                elif audio_bytes.startswith(b"RIFF"):
+                    suffix = ".wav"
+                elif audio_bytes.startswith(b"OggS"):
+                    suffix = ".ogg"
+                elif audio_bytes.startswith(b"ID3") or audio_bytes.startswith(b"\xff\xfb"):
+                    suffix = ".mp3"
+                else:
+                    suffix = ".webm"
+
                 # Write audio payload to a temporary file for ASR
-                temp_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+                temp_file = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
                 temp_filename = temp_file.name
 
                 try:
                     temp_file.write(audio_bytes)
                     temp_file.flush()
                     temp_file.close()
+
+                    # Save debug copy if debug flag is enabled
+                    if os.getenv("VOICEDESK_DEBUG_AUDIO", "").lower() in {"1", "true", "yes"}:
+                        try:
+                            with open("debug_last_audio" + suffix, "wb") as dbg:
+                                dbg.write(audio_bytes)
+                        except Exception:
+                            pass
+
+                    logger.info(
+                        f"Received audio payload: {len(audio_bytes)} bytes, format: {suffix}"
+                    )
 
                     # 1. Automatic Speech Recognition
                     await websocket.send_json({"type": "status", "state": "transcribing"})
@@ -240,6 +264,58 @@ async def audio_websocket(websocket: WebSocket):
             elif msg_type == "clear_memory":
                 memory.clear()
                 await websocket.send_json({"type": "memory_cleared"})
+
+            elif msg_type == "text_query":
+                user_text = (message.get("text") or "").strip()
+                if not user_text:
+                    await websocket.send_json(
+                        {"type": "error", "message": "Empty text prompt provided."}
+                    )
+                    continue
+
+                await websocket.send_json(
+                    {"type": "transcription", "text": user_text, "role": "user"}
+                )
+                memory.add_user(user_text)
+
+                await websocket.send_json({"type": "status", "state": "speaking"})
+                full_response_text = ""
+
+                try:
+                    llm_stream = generate_response_stream(
+                        user_text=user_text,
+                        system_prompt=system_prompt,
+                        memory=memory,
+                    )
+
+                    async def text_tapper(iterator):
+                        nonlocal full_response_text
+                        async for text_chunk in iterator:
+                            full_response_text += text_chunk
+                            await websocket.send_json(
+                                {"type": "text_delta", "delta": text_chunk}
+                            )
+                            yield text_chunk
+
+                    audio_stream = generate_audio_stream(text_tapper(llm_stream))
+
+                    async for audio_chunk in audio_stream:
+                        b64_audio = base64.b64encode(audio_chunk).decode("utf-8")
+                        await websocket.send_json(
+                            {"type": "audio_stream", "data": b64_audio}
+                        )
+
+                    memory.add_assistant(full_response_text)
+                    await websocket.send_json(
+                        {"type": "response_complete", "text": full_response_text}
+                    )
+                    await websocket.send_json({"type": "status", "state": "listening"})
+                except Exception as t_err:
+                    logger.error(f"Error executing text query: {t_err}")
+                    await websocket.send_json(
+                        {"type": "error", "message": f"Processing failed: {t_err}"}
+                    )
+                    await websocket.send_json({"type": "status", "state": "listening"})
 
     except WebSocketDisconnect:
         logger.info(f"Client disconnected ({client_ip})")
