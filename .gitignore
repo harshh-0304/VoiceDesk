@@ -46,6 +46,7 @@ htmlcov/
 temp_*
 *.tmp
 *.log
+debug_last_audio*
 
 # Generated audio artifacts
 *.mp3
