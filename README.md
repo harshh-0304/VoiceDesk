@@ -14,8 +14,10 @@
 ## 🌟 Highlights
 
 - **⚡ Sub-Second Voice Turnaround**: Streaming tokens directly from Groq LLaMA 3.3 piped into Microsoft Edge-TTS audio frame generation.
-- **🎯 Whisper-Large-v3-Turbo ASR**: High-accuracy, noise-tolerant speech recognition powered by Groq.
-- **🌐 Full-Duplex WebSockets**: Real-time duplex voice streaming with silence/VAD auto-commit and text deltas.
+- **🎯 Whisper-Large-v3 ASR**: High-accuracy, noise-tolerant speech recognition with phantom hallucination filtering.
+- **🌐 Full-Duplex WebSockets**: Real-time duplex voice streaming with silence/VAD auto-commit and live text deltas.
+- **💬 Dual Modality Input**: Seamlessly switch between speaking via microphone or typing text queries directly in the UI.
+- **🎙️ Live Audio Hardware Selector**: In-browser device dropdown for microphone selection with real-time VU audio volume metering.
 - **🔮 Next.js Shadow Monarch Dashboard**: Ultra-modern reactive UI featuring live frequency visualizers, dynamic glow auras, and system telemetry streams.
 - **💻 Dual Interaction Modes**: Full Next.js Web UI or standalone terminal CLI with speech and text fallback.
 - **🧠 Contextual Conversation Memory**: Rolling conversational context with serialization and session resets.
@@ -120,6 +122,7 @@ pip install -r requirements.txt
 python server.py
 # Server runs on http://localhost:8000
 ```
+*(Windows users can double-click `start-backend.bat`)*
 
 ### 5. Launch Next.js Dashboard
 In a separate terminal:
@@ -129,6 +132,7 @@ npm install
 npm run dev
 # Visit http://localhost:3000
 ```
+*(Windows users can double-click `start-frontend.bat`)*
 
 ---
 
