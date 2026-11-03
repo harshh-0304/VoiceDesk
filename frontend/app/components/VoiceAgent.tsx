@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Mic, MicOff, Activity, Zap, Terminal, Volume2, Send } from "lucide-react";
+import { Mic, MicOff, Activity, Zap, Terminal, Volume2, Send, Copy, Check, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AudioVisualizer from "./AudioVisualizer";
 import { cn } from "@/lib/utils";
@@ -51,6 +51,7 @@ export default function VoiceAgent() {
     const [audioDevices, setAudioDevices] = useState<{ deviceId: string; label: string }[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
     const [micVolume, setMicVolume] = useState<number>(0);
+    const [copied, setCopied] = useState(false);
 
     // Core Refs
     const wsRef = useRef<WebSocket | null>(null);
@@ -231,6 +232,23 @@ export default function VoiceAgent() {
         setAssistantResponse("");
         setState("thinking");
         addLog(`User: "${prompt}"`);
+    }, [addLog]);
+
+    const handleCopyResponse = useCallback(() => {
+        if (!assistantResponse) return;
+        void navigator.clipboard.writeText(assistantResponse).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }).catch(() => {});
+    }, [assistantResponse]);
+
+    const handleClearConversation = useCallback(() => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({ type: "clear_memory" }));
+        }
+        setTranscription("");
+        setAssistantResponse("");
+        addLog("Conversation context cleared.");
     }, [addLog]);
 
     // VAD & silence polling
@@ -696,6 +714,31 @@ export default function VoiceAgent() {
                     animate={{ opacity: 1, y: 0 }}
                     className="w-full max-w-2xl glass rounded-xl p-5 border border-purple-500/20 text-sm space-y-3"
                 >
+                    <div className="flex items-center justify-between pb-2 border-b border-purple-500/10 text-xs font-mono text-gray-400">
+                        <span>LIVE TRANSCRIPT</span>
+                        <div className="flex items-center gap-2">
+                            {assistantResponse && (
+                                <button
+                                    type="button"
+                                    onClick={handleCopyResponse}
+                                    title="Copy response to clipboard"
+                                    className="px-2 py-0.5 rounded hover:bg-purple-500/20 text-purple-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
+                                >
+                                    {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                                    <span>{copied ? "COPIED" : "COPY"}</span>
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={handleClearConversation}
+                                title="Clear conversation memory"
+                                className="px-2 py-0.5 rounded hover:bg-purple-500/20 text-gray-400 hover:text-purple-300 transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
+                            >
+                                <RotateCcw size={12} />
+                                <span>CLEAR</span>
+                            </button>
+                        </div>
+                    </div>
                     {transcription && (
                         <div className="flex items-start space-x-2 text-purple-200">
                             <span className="font-mono text-xs uppercase text-purple-400 font-semibold min-w-16">User:</span>
