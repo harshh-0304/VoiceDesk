@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import tempfile
+import time
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -34,6 +35,7 @@ load_dotenv()
 MAX_AUDIO_BYTES = int(os.getenv("MAX_AUDIO_BYTES", str(25 * 1024 * 1024)))
 
 SERVICE_VERSION = "1.2.0"
+SERVER_START_TIME = time.time()
 
 app = FastAPI(
     title="VoiceDesk Audio AI Server",
@@ -82,6 +84,8 @@ async def root():
         "endpoints": {
             "health": "/health",
             "info": "/api/info",
+            "stats": "/api/stats",
+            "models": "/api/models",
             "websocket": "/ws/audio",
         },
     }
@@ -108,6 +112,60 @@ async def server_info():
         "voice": os.getenv("VOICEDESK_VOICE", DEFAULT_VOICE),
         "sample_rate": 16000,
         "format": "audio/wav",
+    }
+
+
+@app.get("/api/stats")
+async def server_stats():
+    """Return live system telemetry and runtime uptime metrics."""
+    return {
+        "uptime_seconds": round(time.time() - SERVER_START_TIME, 2),
+        "version": SERVICE_VERSION,
+        "max_audio_bytes": MAX_AUDIO_BYTES,
+        "active_model": os.getenv("VOICEDESK_MODEL", DEFAULT_LLM_MODEL),
+        "active_voice": os.getenv("VOICEDESK_VOICE", DEFAULT_VOICE),
+        "groq_configured": bool(os.getenv("GROQ_API_KEY")),
+    }
+
+
+@app.get("/api/models")
+async def list_models():
+    """Return catalog of supported LLM and ASR models with capabilities."""
+    return {
+        "llm_models": [
+            {
+                "id": "llama-3.3-70b-versatile",
+                "name": "LLaMA 3.3 70B Versatile",
+                "context_window": 128000,
+                "recommended": True,
+            },
+            {
+                "id": "llama-3.1-8b-instant",
+                "name": "LLaMA 3.1 8B Instant",
+                "context_window": 128000,
+                "recommended": False,
+            },
+            {
+                "id": "mixtral-8x7b-32768",
+                "name": "Mixtral 8x7B",
+                "context_window": 32768,
+                "recommended": False,
+            },
+        ],
+        "asr_models": [
+            {
+                "id": "whisper-large-v3",
+                "name": "Whisper Large v3",
+                "multilingual": True,
+                "recommended": True,
+            },
+            {
+                "id": "whisper-large-v3-turbo",
+                "name": "Whisper Large v3 Turbo",
+                "multilingual": True,
+                "recommended": False,
+            },
+        ],
     }
 
 

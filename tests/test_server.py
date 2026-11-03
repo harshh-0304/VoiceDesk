@@ -35,6 +35,29 @@ def test_api_info_endpoint():
     assert data["format"] == "audio/wav"
 
 
+def test_api_stats_endpoint():
+    response = client.get("/api/stats")
+    assert response.status_code == 200
+    data = response.json()
+    assert "uptime_seconds" in data
+    assert data["uptime_seconds"] >= 0
+    assert "version" in data
+    assert "active_model" in data
+    assert "active_voice" in data
+    assert "max_audio_bytes" in data
+
+
+def test_api_models_endpoint():
+    response = client.get("/api/models")
+    assert response.status_code == 200
+    data = response.json()
+    assert "llm_models" in data
+    assert "asr_models" in data
+    assert len(data["llm_models"]) >= 2
+    assert any(m["id"] == "llama-3.3-70b-versatile" for m in data["llm_models"])
+    assert any(m["id"] == "whisper-large-v3" for m in data["asr_models"])
+
+
 def test_load_system_prompt():
     prompt = load_system_prompt()
     assert isinstance(prompt, str)
