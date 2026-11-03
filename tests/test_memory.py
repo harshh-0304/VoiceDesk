@@ -112,3 +112,37 @@ def test_from_dict_skips_unknown_roles():
     }
     mem = ConversationMemory.from_dict(data)
     assert [m["role"] for m in mem.get_history()] == ["user", "assistant"]
+
+
+def test_token_estimation_and_summary():
+    mem = ConversationMemory(max_messages=10)
+    assert mem.estimate_token_count() == 0
+
+    mem.add_user("What is Python?")
+    mem.add_assistant("Python is an interpreted high-level programming language.")
+
+    tokens = mem.estimate_token_count()
+    assert tokens > 0
+
+    summary = mem.get_summary()
+    assert summary["total_messages"] == 2
+    assert summary["user_messages"] == 1
+    assert summary["assistant_messages"] == 1
+    assert summary["estimated_tokens"] == tokens
+    assert summary["max_messages"] == 10
+
+
+def test_export_markdown():
+    mem = ConversationMemory(max_messages=5)
+    empty_md = mem.export_markdown()
+    assert "No messages recorded" in empty_md
+
+    mem.add_user("Hello")
+    mem.add_assistant("Hi there! How can I help?")
+
+    md = mem.export_markdown(title="My Test Session")
+    assert "# My Test Session" in md
+    assert "### User" in md
+    assert "Hello" in md
+    assert "### VoiceDesk" in md
+    assert "Hi there! How can I help?" in md

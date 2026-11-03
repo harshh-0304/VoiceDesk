@@ -96,6 +96,41 @@ class ConversationMemory:
                 instance.add_message(msg["role"], msg["content"])
         return instance
 
+    def estimate_token_count(self) -> int:
+        """Estimate the approximate token count consumed by active conversation history."""
+        # Common rule of thumb: ~4 characters per token plus per-message overhead
+        if not self._messages:
+            return 0
+        total_chars = sum(len(m.get("content", "")) for m in self._messages)
+        message_overhead = len(self._messages) * 4
+        return max(0, int(total_chars / 4) + message_overhead)
+
+    def get_summary(self) -> Dict[str, Any]:
+        """Return aggregate statistics about current conversation session."""
+        user_count = sum(1 for m in self._messages if m["role"] == "user")
+        assistant_count = sum(1 for m in self._messages if m["role"] == "assistant")
+        return {
+            "total_messages": len(self._messages),
+            "user_messages": user_count,
+            "assistant_messages": assistant_count,
+            "estimated_tokens": self.estimate_token_count(),
+            "max_messages": self.max_messages,
+        }
+
+    def export_markdown(self, title: str = "VoiceDesk Transcript") -> str:
+        """Export the conversation transcript as a clean Markdown document."""
+        lines = [f"# {title}", ""]
+        if not self._messages:
+            lines.append("*No messages recorded in this session.*")
+            return "\n".join(lines)
+
+        for msg in self._messages:
+            role_label = "VoiceDesk" if msg["role"] == "assistant" else msg["role"].capitalize()
+            lines.append(f"### {role_label}")
+            lines.append(f"{msg['content']}\n")
+
+        return "\n".join(lines).strip()
+
     def __len__(self) -> int:
         return len(self._messages)
 
