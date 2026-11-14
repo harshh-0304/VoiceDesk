@@ -811,8 +811,17 @@ export default function VoiceAgent() {
 
                 {/* System Logs Stream */}
                 <div className="glass rounded-xl p-4 font-mono text-xs h-48 overflow-y-auto border border-purple-500/10 bg-black/20">
-                    <div className="sticky top-0 bg-transparent text-purple-400/60 mb-2 text-[10px] flex items-center gap-2">
-                        <Terminal size={10} /> SYSTEM_TELEMETRY
+                    <div className="sticky top-0 bg-transparent text-purple-400/60 mb-2 text-[10px] flex items-center justify-between">
+                        <span className="flex items-center gap-2"><Terminal size={10} /> SYSTEM_TELEMETRY</span>
+                        {logs.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setLogs([])}
+                                className="text-[10px] hover:text-purple-300 text-gray-500 transition-colors cursor-pointer"
+                            >
+                                CLEAR
+                            </button>
+                        )}
                     </div>
                     <div className="space-y-1">
                         {logs.map((log, i) => (
