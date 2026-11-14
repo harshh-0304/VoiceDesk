@@ -22,15 +22,27 @@ export default function AudioVisualizer({
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
+        // Support high-DPI displays for ultra-crisp audio bars
+        const dpr = window.devicePixelRatio || 1;
+        const displayWidth = 480;
+        const displayHeight = 90;
+
+        if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+        }
+
         let animationId: number;
         let time = 0;
 
         const draw = () => {
             time += 0.05;
-            const width = canvas.width;
-            const height = canvas.height;
+            const width = displayWidth;
+            const height = displayHeight;
             const centerY = height / 2;
 
+            ctx.save();
+            ctx.scale(dpr, dpr);
             ctx.clearRect(0, 0, width, height);
             ctx.lineCap = "round";
 
@@ -66,6 +78,7 @@ export default function AudioVisualizer({
                 ctx.fillRect(x, centerY - barHeight / 2, barWidth, barHeight);
             }
 
+            ctx.restore();
             animationId = requestAnimationFrame(draw);
         };
 
