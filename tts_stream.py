@@ -13,11 +13,27 @@ from typing import AsyncGenerator, Optional
 logger = logging.getLogger("VoiceDesk.TTSStream")
 
 DEFAULT_VOICE = os.getenv("VOICEDESK_VOICE", "en-US-ChristopherNeural")
-PUNCTUATION_SPLIT_REGEX = re.compile(r"([.!?\n]+)")
+PUNCTUATION_SPLIT_REGEX = re.compile(r"([.!?]+(?:\s+|\n+))")
 
 # Minimum buffered characters before flushing a clause to synthesis. Keeps
 # short fragments and decimals (e.g. "3.14") from being split prematurely.
 MIN_FLUSH_CHARS = 15
+
+
+def split_thought_boundaries(buffer: str) -> tuple[str, str]:
+    """
+    Split text buffer at sentence punctuation boundary.
+    Returns (ready_text, remaining_buffer).
+    """
+    if len(buffer) < MIN_FLUSH_CHARS or not any(p in buffer for p in [".", "!", "?", "\n"]):
+        return "", buffer
+
+    parts = PUNCTUATION_SPLIT_REGEX.split(buffer)
+    if len(parts) > 2:
+        ready = "".join(parts[:-1]).strip()
+        remaining = parts[-1]
+        return ready, remaining
+    return "", buffer
 
 
 async def _stream_text_chunk(text: str, voice: str) -> AsyncGenerator[bytes, None]:
@@ -67,15 +83,11 @@ async def generate_audio_stream(
 
             # Check if we have complete sentences or thought boundaries
             # Avoid prematurely splitting on short strings or decimals
-            if len(buffer) >= MIN_FLUSH_CHARS and any(punct in buffer for punct in [".", "!", "?", "\n"]):
-                parts = PUNCTUATION_SPLIT_REGEX.split(buffer)
-                # Keep everything up to the last split delimiter
-                if len(parts) > 2:
-                    to_synthesize = "".join(parts[:-1]).strip()
-                    buffer = parts[-1]
-                    if to_synthesize:
-                        async for audio_chunk in _stream_text_chunk(to_synthesize, selected_voice):
-                            yield audio_chunk
+            ready_text, remaining_buffer = split_thought_boundaries(buffer)
+            if ready_text:
+                buffer = remaining_buffer
+                async for audio_chunk in _stream_text_chunk(ready_text, selected_voice):
+                    yield audio_chunk
 
         # Process any trailing content in the buffer
         remaining = buffer.strip()
