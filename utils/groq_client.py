@@ -36,3 +36,10 @@ def get_async_groq_client() -> Optional["AsyncGroq"]:
     except ImportError:
         logger.error("The 'groq' package is not installed. Install with: pip install groq")
         return None
+
+
+def reset_groq_client() -> None:
+    """Clear the cached AsyncGroq instance to force re-instantiation on next access."""
+    global _async_groq_client
+    _async_groq_client = None
+
