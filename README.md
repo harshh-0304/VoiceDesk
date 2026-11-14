@@ -134,6 +134,12 @@ npm run dev
 ```
 *(Windows users can double-click `start-frontend.bat`)*
 
+### 6. Alternative: Run with Docker Compose
+Run both backend and frontend together with a single command:
+```bash
+docker compose up --build
+```
+
 ---
 
 ## 💻 Interactive Terminal CLI
@@ -150,9 +156,14 @@ python main.py
 
 ## 🧪 Testing
 
-Run the automated test suite with pytest:
+Run Python backend test suites:
 ```bash
 pytest tests/ -v
+```
+
+Run frontend linting:
+```bash
+npm --prefix frontend run lint
 ```
 
 ---
@@ -161,23 +172,29 @@ pytest tests/ -v
 
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
-| `/` | `GET` | Root status probe |
+| `/` | `GET` | Root status probe & service registry |
 | `/health` | `GET` | Service readiness & API key health check |
 | `/api/info` | `GET` | Active model, voice, and audio specifications |
+| `/api/stats` | `GET` | System uptime metrics, payload limits, and telemetry |
+| `/api/models` | `GET` | Catalog of supported LLaMA and Whisper models |
+| `/api/devices` | `GET` | Enumeration of server-side audio input devices |
 | `/ws/audio` | `WebSocket` | Real-time duplex audio communication stream |
 
 ### WebSocket Messages
 
 - **Client to Server**:
-  - `{"type": "commit", "audio_data": "<base64_wav>"}`: Send recorded user speech.
+  - `{"type": "commit", "audio_data": "<base64_audio>"}`: Send recorded user speech.
+  - `{"type": "text_query", "text": "..."}`: Send direct text prompt query.
   - `{"type": "clear_memory"}`: Reset the active conversation history.
-  - `{"type": "ping"}`: Heartbeat check.
+  - `{"type": "ping", "timestamp": 123456789}`: Latency heartbeat check.
 
 - **Server to Client**:
+  - `{"type": "pong", "client_timestamp": 123456789, "server_time": ...}`: Latency heartbeat response.
   - `{"type": "transcription", "text": "...", "role": "user"}`: User speech transcribed.
   - `{"type": "text_delta", "delta": "..."}`: Streaming LLM response tokens.
   - `{"type": "audio_stream", "data": "<base64_mp3_chunk>"}`: Streaming audio frames.
-  - `{"type": "status", "state": "listening" | "speaking" | "thinking"}`: State machine updates.
+  - `{"type": "response_complete", "text": "..."}`: Full synthesized response completed.
+  - `{"type": "status", "state": "listening" | "speaking" | "thinking" | "transcribing"}`: State machine updates.
 
 ---
 
