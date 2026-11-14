@@ -22,8 +22,10 @@ export default function Particles() {
         const particleCount = 45;
 
         const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            ctx.scale(dpr, dpr);
         };
         window.addEventListener("resize", resize);
         resize();
