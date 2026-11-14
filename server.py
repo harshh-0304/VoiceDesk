@@ -21,6 +21,7 @@ from asr import transcribe_audio
 from llm import DEFAULT_LLM_MODEL, generate_response_stream
 from memory import ConversationMemory
 from tts_stream import DEFAULT_VOICE, generate_audio_stream
+from utils.audio import get_audio_input_devices
 
 # Configure logging
 logging.basicConfig(
@@ -86,6 +87,7 @@ async def root():
             "info": "/api/info",
             "stats": "/api/stats",
             "models": "/api/models",
+            "devices": "/api/devices",
             "websocket": "/ws/audio",
         },
     }
@@ -169,6 +171,16 @@ async def list_models():
     }
 
 
+@app.get("/api/devices")
+async def audio_devices():
+    """Return host audio input hardware available to the server."""
+    devices = get_audio_input_devices()
+    return {
+        "count": len(devices),
+        "devices": devices,
+    }
+
+
 @app.websocket("/ws/audio")
 async def audio_websocket(websocket: WebSocket):
     """
@@ -197,7 +209,10 @@ async def audio_websocket(websocket: WebSocket):
             msg_type = message.get("type")
 
             if msg_type == "ping":
-                await websocket.send_json({"type": "pong"})
+                pong_payload = {"type": "pong", "server_time": time.time()}
+                if "timestamp" in message:
+                    pong_payload["client_timestamp"] = message["timestamp"]
+                await websocket.send_json(pong_payload)
 
             elif msg_type == "commit":
                 audio_b64 = message.get("audio_data")
