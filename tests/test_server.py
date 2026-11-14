@@ -58,6 +58,15 @@ def test_api_models_endpoint():
     assert any(m["id"] == "whisper-large-v3" for m in data["asr_models"])
 
 
+def test_api_devices_endpoint(monkeypatch):
+    monkeypatch.setattr("server.get_audio_input_devices", lambda: [{"index": 0, "name": "Mock Mic", "channels": 1}])
+    response = client.get("/api/devices")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["count"] == 1
+    assert data["devices"][0]["name"] == "Mock Mic"
+
+
 def test_load_system_prompt():
     prompt = load_system_prompt()
     assert isinstance(prompt, str)
@@ -67,7 +76,19 @@ def test_load_system_prompt():
 def test_websocket_ping_pong():
     with client.websocket_connect("/ws/audio") as ws:
         ws.send_json({"type": "ping"})
-        assert ws.receive_json() == {"type": "pong"}
+        reply = ws.receive_json()
+        assert reply["type"] == "pong"
+        assert "server_time" in reply
+
+
+def test_websocket_ping_timestamp_echo():
+    with client.websocket_connect("/ws/audio") as ws:
+        ts = 1731590000.123
+        ws.send_json({"type": "ping", "timestamp": ts})
+        reply = ws.receive_json()
+        assert reply["type"] == "pong"
+        assert reply["client_timestamp"] == ts
+        assert "server_time" in reply
 
 
 def test_websocket_rejects_invalid_json():
