@@ -13,11 +13,25 @@ from typing import Optional
 
 logger = logging.getLogger("VoiceDesk.TTS")
 
+DEFAULT_TTS_LANG = os.getenv("VOICEDESK_TTS_LANG", "en")
+
+
+def cleanup_audio_file(file_path: Optional[str]) -> bool:
+    """Safely delete an audio file if it exists on disk."""
+    if not file_path or not os.path.exists(file_path):
+        return False
+    try:
+        os.remove(file_path)
+        return True
+    except OSError as exc:
+        logger.warning(f"Failed to remove audio file '{file_path}': {exc}")
+        return False
+
 
 def text_to_speech(
     text: str,
     output_path: str = "reply.mp3",
-    lang: str = "en",
+    lang: str = DEFAULT_TTS_LANG,
     speed: float = 1.25,
 ) -> Optional[str]:
     """
