@@ -31,6 +31,30 @@ def is_microphone_available() -> bool:
         return False
 
 
+def get_audio_input_devices() -> list[dict]:
+    """Return a list of available audio input devices with index, name, and channels."""
+    devices: list[dict] = []
+    try:
+        import pyaudio
+        pa = pyaudio.PyAudio()
+        try:
+            device_count = pa.get_device_count()
+            for i in range(device_count):
+                info = pa.get_device_info_by_index(i)
+                if info.get("maxInputChannels", 0) > 0:
+                    devices.append({
+                        "index": i,
+                        "name": str(info.get("name", f"Microphone {i}")),
+                        "channels": int(info.get("maxInputChannels", 1)),
+                        "default_sample_rate": int(info.get("defaultSampleRate", 16000)),
+                    })
+        finally:
+            pa.terminate()
+    except Exception as exc:
+        logger.debug(f"Could not enumerate host audio devices: {exc}")
+    return devices
+
+
 def record_microphone(
     output_path: str = "input.wav",
     duration_seconds: int = 5,
