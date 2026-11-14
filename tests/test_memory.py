@@ -146,3 +146,26 @@ def test_export_markdown():
     assert "Hello" in md
     assert "### VoiceDesk" in md
     assert "Hi there! How can I help?" in md
+
+
+def test_conversation_search():
+    mem = ConversationMemory(max_messages=10)
+    assert mem.search("hello") == []
+    assert mem.search("") == []
+
+    mem.add_user("I need help with Python code")
+    mem.add_assistant("Sure! Python is great for AI development.")
+    mem.add_user("What about JavaScript?")
+
+    results = mem.search("python")
+    assert len(results) == 2
+    assert results[0]["role"] == "user"
+    assert results[1]["role"] == "assistant"
+
+    results_js = mem.search("javascript")
+    assert len(results_js) == 1
+    assert results_js[0]["content"] == "What about JavaScript?"
+
+    results_none = mem.search("Rust")
+    assert results_none == []
+
