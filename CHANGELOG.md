@@ -3,24 +3,40 @@
 All notable changes to VoiceDesk are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.3.0] - 2026-11-14
 
 ### Added
-- MIT `LICENSE`.
-- `requirements-dev.txt` for test and CLI extras.
-- `pytest.ini` so bare `pytest` resolves imports from the repo root.
-- `Makefile`, `.editorconfig`, `.gitattributes`, and `.dockerignore`.
-- Backend `Dockerfile` (includes ffmpeg for TTS speed adjustment).
-- GitHub Actions CI running the test suite on Python 3.11 and 3.12.
-- `MAX_AUDIO_BYTES` guard rejecting oversized WebSocket audio payloads.
-- Role validation in `ConversationMemory`.
-- Added tests for ASR guards, memory validation, and WebSocket handling.
+- Multi-service `docker-compose.yml` for unified backend and frontend orchestration.
+- Frontend containerization with `frontend/Dockerfile`.
+- `GET /api/devices` REST endpoint exposing host audio input hardware to clients.
+- `GET /api/stats` and `GET /api/models` system telemetry and model catalog endpoints.
+- Client latency estimation with timestamp-echoing in WebSocket heartbeat pings.
+- Conversation keyword search `ConversationMemory.search(query)`.
+- Markdown conversation transcript export and estimated token consumption metrics.
+- High-DPI canvas scaling support for `AudioVisualizer` and `Particles`.
+- One-click copy response to clipboard and clear telemetry log actions in UI.
+- Comprehensive unit test suites for `groq_client`, `tts`, `tts_stream`, and `audio`.
+- GitHub Actions CI workflow adding Next.js frontend lint and build verification.
 
 ### Fixed
-- `is_microphone_available()` now enumerates input devices by global index.
-- TTS playback speed is clamped to ffmpeg's supported `atempo` range (0.5–2.0).
-- `ConversationMemory.from_dict` skips malformed/unknown-role entries.
+- Streaming TTS punctuation delimiter splitting to prevent awkward pauses on decimal values and abbreviations.
+- Safe audio file deletion helper preventing dangling temporary files.
+- PyAudio device enumeration error handling.
 
-### Changed
-- Removed generated audio artifacts and a stray screenshot from version control.
-- Moved development dependencies out of the runtime `requirements.txt`.
+## [1.2.0] - 2026-11-02
+
+### Added
+- Groq Whisper ASR phantom hallucination suppression on silence.
+- Multilingual and configurable speech recognition settings.
+- Interactive text query input bar alongside speech streaming.
+- Real-time VU mic volume level meter and audio device input selector.
+- Portable Windows dev launcher scripts (`run.bat`, `start-backend.bat`, `start-frontend.bat`).
+
+## [1.0.0] - 2026-10-26
+
+### Added
+- Initial open-source release of VoiceDesk.
+- FastAPI WebSocket duplex audio server.
+- Groq Cloud Whisper-large-v3 and LLaMA 3.3 integration.
+- Microsoft Edge-TTS neural audio streaming pipeline.
+- Next.js reactive frontend dashboard with spectrum audio visualizer.
