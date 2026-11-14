@@ -117,6 +117,17 @@ class ConversationMemory:
             "max_messages": self.max_messages,
         }
 
+    def search(self, query: str) -> List[Dict[str, str]]:
+        """Search conversation history for messages containing the query string (case-insensitive)."""
+        q = query.strip().lower() if query else ""
+        if not q:
+            return []
+        return [
+            {"role": m["role"], "content": m["content"]}
+            for m in self._messages
+            if q in m["content"].lower()
+        ]
+
     def export_markdown(self, title: str = "VoiceDesk Transcript") -> str:
         """Export the conversation transcript as a clean Markdown document."""
         lines = [f"# {title}", ""]
